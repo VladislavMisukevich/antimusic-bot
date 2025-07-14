@@ -3,6 +3,11 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy.exc import IntegrityError
 from config import Config
 import logging
+import sys
+if sys.version_info >= (3, 13):
+    print("FATAL ERROR: Python 3.13 is not supported")
+    print("Please use Python 3.11")
+    sys.exit(1)
 
 # Настройка логгера
 logger = logging.getLogger(__name__)
