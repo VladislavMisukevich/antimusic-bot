@@ -197,6 +197,7 @@ async def admin_approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     assignment_id = int(query.data.split("_")[1])
+    reward = 0  # Инициализируем переменную
 
     with Session() as session:
         assignment = session.get(Assignment, assignment_id)
@@ -219,7 +220,7 @@ async def admin_approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Начисление репутации
             lesson = session.get(Lesson, assignment.item_id)
-            reward = config.FINAL_LESSON_REWARD if "выпускн" in lesson.title.lower() else config.LESSON_REWARD
+            reward = config.FINAL_LESSON_REWARD if lesson and "выпускн" in lesson.title.lower() else config.LESSON_REWARD
             db_user.reputation += reward
 
         else:  # type == "song"
@@ -233,7 +234,8 @@ async def admin_approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
             db_user.current_song_id = None
 
             # Начисление репутации
-            db_user.reputation += config.SONG_REWARD
+            reward = config.SONG_REWARD
+            db_user.reputation += reward
 
         # Обновление звания
         db_user.update_rank(config)
@@ -265,7 +267,7 @@ async def admin_reject(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with Session() as session:
         assignment = session.get(Assignment, assignment_id)
         if not assignment or assignment.status != "pending":
-            await query.edit_message_text("❌ Задание уже обработано!")
+            await query.edit_message_text("✔️ Задание уже обработано!")
             return
 
         db_user = session.query(User).filter_by(id=assignment.user_id).first()
