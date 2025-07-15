@@ -3,6 +3,8 @@ from database import init_db
 from handlers import *
 from config import Config
 import logging
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
 
 # Настройка логирования
 logging.basicConfig(
@@ -11,8 +13,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+def run_health_check():
+    server = HTTPServer(('0.0.0.0', 8080), HealthCheckHandler)
+    server.serve_forever()
 
 def main():
+    health_thread = threading.Thread(target=run_health_check, daemon=True)
+    health_thread.start()
     # Инициализация базы данных
     init_db()
 
@@ -44,4 +57,25 @@ def main():
 
 
 if __name__ == "__main__":
+    # Запускаем health-check сервер в отдельном потоке
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+    class HealthHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"Bot is healthy")
+
+
+    def run_health_server():
+        server = HTTPServer(('0.0.0.0', 10000), HealthHandler)
+        server.serve_forever()
+
+
+    health_thread = threading.Thread(target=run_health_server, daemon=True)
+    health_thread.start()
+
+    # Запускаем бота
     main()
